@@ -46,9 +46,8 @@ var app = {
     
     onstartconfig: function() {
         cblite.getURL(function(err,url) {
-                        console.log("CBLITE");
-                        var db = coax([url, appDbName]);
-                      
+            console.log("CBLITE");
+            var db = coax([url, appDbName]);           
         });
     },
     
