@@ -19,7 +19,8 @@
 
 var coax = require("coax"),
     appDbName = "hailer",
-    currentpage = "#main";
+    currentpage = "#main",
+    composition;
 
 var startX, startY, endX, endY;
 document.addEventListener("touchstart", function(e){
@@ -36,7 +37,22 @@ document.addEventListener("touchend", function(e){
                         //  e.preventDefault();//Stops the default behavior
                           }, false);
 
+var message = function () {
+    this.pictures = [];
+    this.text;
+}
 
+var album = {
+    preview : function(message) {
+        $("#preview").empty();
+        var children = [];
+        for(var i in message.pictures) {
+            children.push('<img src="'+"data:image/jpeg;base64,"+message.pictures[i]+'" width="100"></img>');
+        }
+        console.log(children.join());
+        $("#preview").append(children.join());
+    }
+}
 
 var app = {
     // Application Constructor
@@ -64,12 +80,19 @@ var app = {
         $('#share_button').bind('touchstart', function (e) {
                                 console.log("TOUCH STARTED");
                                 app.navpage('#share');
+                                composition = new message();
+                                
         });
         
         $('#cam_button').bind('touchstart', function(e) {
             if (!(navigator.camera && navigator.camera.getPicture)) {return}
             
             navigator.camera.getPicture(function(imageData) {
+                        
+              console.log(composition.pictures.length);
+              composition.pictures.push(imageData);
+              album.preview(composition);
+                   /*
                 config.db(id, function(err, doc){
                     doc._attachments = {
                           "image.jpg" : {
@@ -77,16 +100,15 @@ var app = {
                            data : imageData
                         }
                       }
-            config.db.post(doc, function(err, ok) {})
-                                                                    })
-                                                          }, function(message) { // onFail
-                                                          }, {
+                      config.db.post(doc, function(err, ok) {})
+                })*/
+                }, function(message) { console.log("cam failed");
+                }, {
                                                           quality: 50,
                                                           targetWidth : 1000,
                                                           targetHeight : 1000,
                                                           destinationType: Camera.DestinationType.DATA_URL
                                                           });
-                              
                               
                               
                               });
