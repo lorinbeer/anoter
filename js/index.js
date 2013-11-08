@@ -26,15 +26,16 @@ document.addEventListener("touchstart", function(e){
                           startX = e.touches[0].pageX;
                           startY = e.touches[0].pageY;
                           console.log("start:",startX,startY);
-                          e.preventDefault();//Stops the default behavior
+                       //   e.preventDefault();//Stops the default behavior
                           }, false);
 
 document.addEventListener("touchend", function(e){
                           endX = e.touches[0].pageX;
                           endY = e.touches[0].pageY;
                           console.log("end",endX,endY);
-                          e.preventDefault();//Stops the default behavior
+                        //  e.preventDefault();//Stops the default behavior
                           }, false);
+
 
 
 var app = {
@@ -66,14 +67,11 @@ var app = {
         });
         
         $('#cam_button').bind('touchstart', function(e) {
-                              
-                              
-                              
-        if (!(navigator.camera && navigator.camera.getPicture)) {return}
+            if (!(navigator.camera && navigator.camera.getPicture)) {return}
             
-        navigator.camera.getPicture(function(imageData) {
-            config.db(id, function(err, doc){
-                      doc._attachments = {
+            navigator.camera.getPicture(function(imageData) {
+                config.db(id, function(err, doc){
+                    doc._attachments = {
                           "image.jpg" : {
                            content_type : "image/jpg",
                            data : imageData
