@@ -51,6 +51,16 @@ var album = {
         }
         console.log(children.join());
         $("#preview").append(children.join());
+    },
+    getPhoto : function(source, dest) {
+        navigator.camera.getPicture(function(imageData){
+                                    console.log(composition.pictures.length);
+                                    composition.pictures.push(imageData);
+                                    album.preview(composition);
+
+                                    },
+                                    function(msg) {},
+                                    {quality: 50, sourceType : source, destinationType:dest});
     }
 }
 
@@ -83,7 +93,15 @@ var app = {
                                 composition = new message();
                                 
         });
-        
+    
+        $('#img_button').bind('touchstart', function(e) {
+           console.log(navigator.camera.PictureSourceType);
+           album.getPhoto(navigator.camera.PictureSourceType.PHOTOLIBRARY,
+                          navigator.camera.DestinationType.DATA_URL);
+    
+                              
+        });
+
         $('#cam_button').bind('touchstart', function(e) {
             if (!(navigator.camera && navigator.camera.getPicture)) {return}
             
