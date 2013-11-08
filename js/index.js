@@ -18,7 +18,24 @@
  */
 
 var coax = require("coax"),
-    appDbName = "hailer";
+    appDbName = "hailer",
+    currentpage = "#main";
+
+var startX, startY, endX, endY;
+document.addEventListener("touchstart", function(e){
+                          startX = e.touches[0].pageX;
+                          startY = e.touches[0].pageY;
+                          console.log("start:",startX,startY);
+                          e.preventDefault();//Stops the default behavior
+                          }, false);
+
+document.addEventListener("touchend", function(e){
+                          endX = e.touches[0].pageX;
+                          endY = e.touches[0].pageY;
+                          console.log("end",endX,endY);
+                          e.preventDefault();//Stops the default behavior
+                          }, false);
+
 
 var app = {
     // Application Constructor
@@ -37,10 +54,46 @@ var app = {
     // The scope of 'this' is the event. In order to call the 'receivedEvent'
     // function, we must explicity call 'app.receivedEvent(...);'
     onDeviceReady: function() {
+        $('#share').toggle();
         app.receivedEvent('deviceready');
         for(var i = 0; i < 100; i=i+1) {
             console.log("device ready");
         }
+        
+        $('#share_button').bind('touchstart', function (e) {
+                                console.log("TOUCH STARTED");
+                                app.navpage('#share');
+        });
+        
+        $('#cam_button').bind('touchstart', function(e) {
+                              
+                              
+                              
+        if (!(navigator.camera && navigator.camera.getPicture)) {return}
+            
+        navigator.camera.getPicture(function(imageData) {
+            config.db(id, function(err, doc){
+                      doc._attachments = {
+                          "image.jpg" : {
+                           content_type : "image/jpg",
+                           data : imageData
+                        }
+                      }
+            config.db.post(doc, function(err, ok) {})
+                                                                    })
+                                                          }, function(message) { // onFail
+                                                          }, {
+                                                          quality: 50,
+                                                          targetWidth : 1000,
+                                                          targetHeight : 1000,
+                                                          destinationType: Camera.DestinationType.DATA_URL
+                                                          });
+                              
+                              
+                              
+                              });
+        
+        
         app.onstartconfig();
     },
     
@@ -75,7 +128,8 @@ var app = {
   
                         console.log("this doesn't Work?");
                                 });
-        
+     
+    
     },
     
     // Update DOM on a Received Event
@@ -89,20 +143,14 @@ var app = {
 
         console.log('Received Event: ' + id);
         
+    },
+    navpage: function(pageid) {
+        console.log("nav to page", pageid);
+        $(currentpage).toggle();
+        $(pageid).toggle();
+        currentpage = pageid;
     }
 };
-/*
-function pagenav(page) {
-    console.log("pagenav");
-    /*
-    $(currentpage).removeClass('active');
-    $(currentpage).addClass('inactive');
-    
-    $(page).addClass('active');
-    $(page).removeClass('inactive');
-     
-}
-*/
 
 
 var id;
