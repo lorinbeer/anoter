@@ -18,6 +18,7 @@
  */
 
 var coax = require("coax"),
+    fastclick = require("fastclick"),
     appDbName = "hailer",
     currentpage = "#main",
     composition;
@@ -26,14 +27,14 @@ var startX, startY, endX, endY;
 document.addEventListener("touchstart", function(e){
                           startX = e.touches[0].pageX;
                           startY = e.touches[0].pageY;
-                          console.log("start:",startX,startY);
+                        //  console.log("start:",startX,startY,e.touches[0]);
                        //   e.preventDefault();//Stops the default behavior
                           }, false);
 
 document.addEventListener("touchend", function(e){
                           endX = e.touches[0].pageX;
                           endY = e.touches[0].pageY;
-                          console.log("end",endX,endY);
+                          console.log("end",endX,endY,e);
                         //  e.preventDefault();//Stops the default behavior
                           }, false);
 
@@ -85,7 +86,7 @@ var app = {
     // function, we must explicity call 'app.receivedEvent(...);'
     onDeviceReady: function() {
         $('#share')  .toggle();
-        $('#history').toggle();
+      //  $('#history').toggle();
         
         app.receivedEvent('deviceready');
         for(var i = 0; i < 100; i=i+1) {
@@ -136,26 +137,46 @@ var app = {
                               
                               });
         
+        $('.history').on("click", "li", function() {
+                         console.log('list element clicked');
+        })
+
+        
+        
         $('#history_button').bind('touchstart', function(e) {
+        var history = '<div class="topcoat-list"><h3 class="topcoat-list__header">History</h3><ul class="topcoat-list__container">';
                                   console.log("HISTORY BUTTON");
-                                  //$('#history').toggle();
+                             //     $('#history').toggle();
+            $('#history').empty();
+                                  var id=[];
             window.config.site.views(["messages", {descending : true}], function(err, view) {
-                                     console.log("happy times");
                         view.rows.forEach(function(row) {
-                                          console.log("this is a sad notification");
-                                          });
+                            history = history+ ('<li class="Topcoat-list__item" id="'+row.id+'">'+row.key+'</li>');
+                                          id.push(row.id);
+    
+             
+                        });
+                    history = history + '</ul></div>';
+                                     
+                                
 
-                                     console.log(view);
+                  //  $('#history').empty();
+                   $('#history').append(history);
+                   console.log("HASUHTSHTOEUSTHOEUSTH");
+                    for(i=0;i<id.length;i++) {
+                        console.log(id[i]);
+                                     $('#B6CBCDE4-781D-4750-A623-EC3161D07AFA').bind('touchstart',function(e){ console.log('I WAS CALLED');});
+                        $('#'+id[i]).bind('touchstart', function(e) {
+                                          var i = $(this).attr("id");
+                        console.log('TOUCHED LIST',i);
+                                            });
+                                     }
+                                     //console.log(history);
+                                     
             });
-
-                                  
-
-                                  
-                                  
-                                  
         });
             
-    
+
         $('#back_button').bind('touchstart', function(e) {
                         console.log("back button");
             app.navpage('#main');
