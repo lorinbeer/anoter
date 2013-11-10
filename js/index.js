@@ -38,8 +38,9 @@ document.addEventListener("touchend", function(e){
                           }, false);
 
 var message = function () {
+    this.type = "message";
     this.pictures = [];
-    this.text;
+    this.text = "null";
     this.user = "lorin@adobe.com";
 }
 
@@ -83,7 +84,9 @@ var app = {
     // The scope of 'this' is the event. In order to call the 'receivedEvent'
     // function, we must explicity call 'app.receivedEvent(...);'
     onDeviceReady: function() {
-        $('#share').toggle();
+        $('#share')  .toggle();
+        $('#history').toggle();
+        
         app.receivedEvent('deviceready');
         for(var i = 0; i < 100; i=i+1) {
             console.log("device ready");
@@ -109,6 +112,16 @@ var app = {
             window.config.site.db.post(composition, function(err, ok) {
                                        console.log(err,ok.id);
                                        });
+                         
+                         window.config.site.views(["messages", {descending : true}], function(err, view) {
+                                                  console.log("happy times");
+                                                  view.rows.forEach(function(row) {
+                                                                    console.log("this is a sad notification");
+                                                                    });
+                                                  
+                                                  console.log(view);
+                                                  });
+
         });
         
         
@@ -131,6 +144,27 @@ var app = {
                               
                               
                               });
+        
+        $('#history_button').bind('touchstart', function(e) {
+                                  console.log("HISTORY BUTTON");
+                                  //$('#history').toggle();
+            window.config.site.views(["messages", {descending : true}], function(err, view) {
+                                     console.log("happy times");
+                        view.rows.forEach(function(row) {
+                                          console.log("this is a sad notification");
+                                          });
+
+                                     console.log(view);
+            });
+
+                                  
+
+                                  
+                                  
+                                  
+        });
+            
+    
         
         
         app.onstartconfig();
@@ -252,7 +286,7 @@ function setupDb(db, cb) {
 }
 
 function setupViews(db, cb) {
-    var design = "_design/todo9"
+    var design = "_design/hailer"
     db.put(design, {
            views : {
             registration : {
