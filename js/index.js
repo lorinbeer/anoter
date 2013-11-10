@@ -112,15 +112,6 @@ var app = {
             window.config.site.db.post(composition, function(err, ok) {
                                        console.log(err,ok.id);
                                        });
-                         
-                         window.config.site.views(["messages", {descending : true}], function(err, view) {
-                                                  console.log("happy times");
-                                                  view.rows.forEach(function(row) {
-                                                                    console.log("this is a sad notification");
-                                                                    });
-                                                  
-                                                  console.log(view);
-                                                  });
 
         });
         
@@ -165,7 +156,10 @@ var app = {
         });
             
     
-        
+        $('#back_button').bind('touchstart', function(e) {
+                        console.log("back button");
+            app.navpage('#main');
+        });
         
         app.onstartconfig();
     },
