@@ -40,6 +40,7 @@ document.addEventListener("touchend", function(e){
 var message = function () {
     this.pictures = [];
     this.text;
+    this.user = "lorin@adobe.com";
 }
 
 var album = {
@@ -52,6 +53,7 @@ var album = {
         console.log(children.join());
         $("#preview").append(children.join());
     },
+    
     getPhoto : function(source, dest) {
         navigator.camera.getPicture(function(imageData){
                                     console.log(composition.pictures.length);
@@ -98,10 +100,18 @@ var app = {
            console.log(navigator.camera.PictureSourceType);
            album.getPhoto(navigator.camera.PictureSourceType.PHOTOLIBRARY,
                           navigator.camera.DestinationType.DATA_URL);
-    
                               
         });
 
+        $('#share').bind('touchstart', function(e) {
+                         //composition.text = "blah";
+                         
+            window.config.site.db.post(composition, function(err, ok) {
+                                       console.log(err,ok.id);
+                                       });
+        });
+        
+        
         $('#cam_button').bind('touchstart', function(e) {
             if (!(navigator.camera && navigator.camera.getPicture)) {return}
             
@@ -110,16 +120,7 @@ var app = {
               console.log(composition.pictures.length);
               composition.pictures.push(imageData);
               album.preview(composition);
-                   /*
-                config.db(id, function(err, doc){
-                    doc._attachments = {
-                          "image.jpg" : {
-                           content_type : "image/jpg",
-                           data : imageData
-                        }
-                      }
-                      config.db.post(doc, function(err, ok) {})
-                })*/
+
                 }, function(message) { console.log("cam failed");
                 }, {
                                                           quality: 50,
@@ -254,16 +255,21 @@ function setupViews(db, cb) {
     var design = "_design/todo9"
     db.put(design, {
            views : {
-            lists : {
+            registration : {
                 map : function(doc) {
                     if (doc.type == "registration" && doc.user && doc.name) {
                         emit(doc.name)
                     }
                     }.toString()
-            }
-           
+            },
+           messages : {
+           map : function(doc) {
+                if(doc.type == "message" && doc.text && doc.user) {
+                    emit(doc.user);
            }
-           }, function(){
+           }.toString()
+           }
+           }}, function(){
            cb(false, db([design, "_view"]))
            })
 }
