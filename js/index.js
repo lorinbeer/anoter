@@ -164,12 +164,14 @@ var app = {
                    console.log("HASUHTSHTOEUSTHOEUSTH");
                     for(i=0;i<id.length;i++) {
                         console.log(id[i]);
-                                     $('#B6CBCDE4-781D-4750-A623-EC3161D07AFA').bind('touchstart',function(e){ console.log('I WAS CALLED');});
-                        $('#'+id[i]).bind('touchstart', function(e) {
+                        $('#'+id[i]).bind("click", function(e) {
                                           var i = $(this).attr("id");
                         console.log('TOUCHED LIST',i);
                                             });
-                                     }
+                        $('#'+id[i]).on("swipeRight", function(e) {
+                                        console.log($(this).attr("id"), 'swiped right');
+                        });
+                    }
                                      //console.log(history);
                                      
             });
