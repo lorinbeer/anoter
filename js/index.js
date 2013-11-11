@@ -86,10 +86,7 @@ var app = {
     onDeviceReady: function() {
         $('#share')  .toggle();
       //  $('#history').toggle();
-        
-        for(var i = 0; i < 100; i=i+1) {
-            console.log("device ready");
-        }
+
         
         $('#share_button').bind('touchstart', function (e) {
                                 console.log("TOUCH STARTED");
@@ -176,7 +173,6 @@ var app = {
 
                   //  $('#history').empty();
                    $('#history').append(history);
-                   console.log("HASUHTSHTOEUSTHOEUSTH");
                     for(i=0;i<id.length;i++) {
                         console.log(id[i]);
                         $('#'+id[i]).bind("click", function(e) {
@@ -198,6 +194,11 @@ var app = {
         });
         
         app.onstartconfig();
+        /*
+        triggerSync(function(err) {
+                    if (err) {console.log("error on sync"+ JSON.stringify(err))}
+                    });
+        */
     },
     
     onstartconfig: function() {
@@ -223,8 +224,8 @@ var app = {
                                 
                                          }
                                          console.log("setting window.config");
-                                console.log("config", window.config.site.syncUrl)
-                                         registrationRequest('lorin@adobe.com','lorin');
+                                                 triggerSync();
+                                        registrationRequest('lorin@adobe.com','lorin');
                                         });
             
                                 });
@@ -338,5 +339,226 @@ function setupViews(db, cb) {
            }}, function(){
            cb(false, db([design, "_view"]))
            })
+}
+
+/*
+ Sync Manager: this is run on first login, and on every app boot after that.
+ 
+ The way it works is with an initial single push replication. When that
+ completes, we know we have a valid connection, so we can trigger a continuous
+ push and pull
+ 
+ */
+
+function triggerSync(cb, retryCount) {
+    
+/*    if (!config.user) {
+        return log("no user")
+    }
+ */
+    console.log(window.config.site.syncUrl);
+    var remote = {
+        url : window.config.site.syncUrl
+    },
+    push = {
+        source : appDbName,
+        target : remote,
+        continuous : true
+    }, pull = {
+        target : appDbName,
+        source : remote,
+        continuous : true
+    };
+    
+    pushSync = syncManager(window.config.site.server, push);
+    pullSync = syncManager(window.config.site.server, pull);
+    
+    if (typeof retryCount == "undefined") {
+        retryCount = 3
+    }
+    /*
+    var challenged = false;
+    function authChallenge() {
+        if (challenged) {return}
+        challenged = true;
+        pushSync.cancel(function(err, ok) {
+                        pullSync.cancel(function(err, ok) {
+                                        if (retryCount == 0) {return cb("sync retry limit reached")}
+                                        retryCount--
+                                        getNewFacebookToken(function(err, ok) {
+                                                            if (err) {
+                                                            return loginErr(err)
+                                                            }
+                                                            triggerSync(cb, retryCount)
+                                                            })
+                                        })
+                        })
+    }
+    */
+    
+    //pushSync.on("auth-challenge", authChallenge)
+    //pullSync.on("auth-challenge", authChallenge)
+    
+    pushSync.on("error", function(err){
+                if (challenged) {return}
+                cb(err)
+                })
+    pushSync.on("connected", function(){
+                pullSync.start()
+                })
+    pullSync.on("error", function(err){
+                if (challenged) {return}
+                cb(err)
+                })
+    pullSync.on("connected", function(){
+                cb()
+                })
+    // setTimeout(function(){
+    pushSync.start()
+    // }, 10000)
+
+}
+
+
+/*
+ Sync manager module TODO extract to NPM
+ */
+
+function syncManager(serverUrl, syncDefinition) {
+    var handlers = {}
+    
+    function callHandlers(name, data) {
+        (handlers[name]||[]).forEach(function(h){
+                                     h(data)
+                                     })
+    };
+    /*
+    function doCancelPost(cb) {
+        /*
+        var cancelDef = JSON.parse(JSON.stringify(syncDefinition))
+        cancelDef.cancel = true
+        coax.post([serverUrl, "_replicate"], cancelDef, function(err, info){
+                  if (err) {
+                  callHandlers("error", err)
+                  if (cb) {cb(err, info)}
+                  } else {
+                  callHandlers("cancelled", info)
+                  if (cb) {cb(err, info)}
+                  }
+                  })
+     
+    }
+    */
+    function doStartPost() {
+        /*
+        var tooLate;
+        function pollForStatus(info, wait) {
+            if (wait) {
+                setTimeout(function() {
+                           tooLate = true
+                           }, wait)
+            }
+            processTaskInfo(info.session_id, function(done){
+                            if (!done && !tooLate) {
+                            setTimeout(function() {
+                                       pollForStatus(info)
+                                       }, 200)
+                            } else if (tooLate) {
+                            callHandlers("error", "timeout")
+                            }
+                            })
+        }
+        */
+        
+        var callBack;
+        if (syncDefinition.continuous) {
+            // auth errors not detected for continuous sync
+            // we could use _active_tasks?feed=continuous for this
+            // but we don't need that code for this app...
+            callBack = function(err, info) {
+                console.log("continuous sync callBack", err, info, syncDefinition)
+                console.log(info);
+                if (err) {
+                    console.log("OH GOD THERE WAS AN ERROR");
+                    callHandlers("error", err)
+                } else {
+                    pollForStatus(info, 10000)
+                    callHandlers("started", info)
+                }
+            }
+        } /*else { // non-continuous
+            callBack = function(err, info) {
+                log("sync callBack", err, info, syncDefinition)
+                if (err) {
+                    if (info.status == 401) {
+                        err.status = info.status;
+                        callHandlers("auth-challenge", err)
+                    } else {
+                        err.status = info.status;
+                        callHandlers("error", err)
+                    }
+                } else {
+                    callHandlers("connected", info)
+                }
+                
+            }
+        }
+        */
+        //log("start sync"+ JSON.stringify(syncDefinition))
+        console.log("RIGHT HERE RIGHT HERE");
+        coax.post([serverUrl, "_replicate"], syncDefinition, callBack)
+        
+        // coax.post([serverUrl, "_replicator"], syncDefinition, callBack)
+    }
+    /*
+    function processTaskInfo(id, cb) {
+        taskInfo(id, function(err, task) {
+                 if (err) {return cb(err)}
+                 log("task", task)
+                 
+                 publicAPI.task = task
+                 if (task.error && task.error[0] == 401) {
+                 cb(true)
+                 callHandlers("auth-challenge", {status : 401, error : task.error[1]})
+                 } else if (task.error && task.error[0] == 502) {
+                 cb(true)
+                 callHandlers("auth-challenge", {status : 502, error : task.error[1]})
+                 } else if (task.status == "Idle" || task.status == "Stopped" || (/Processed/.test(task.status) && !/Processed 0/.test(task.status))) {
+                 cb(true)
+                 callHandlers("connected", task)
+                 } else if (/Processed 0 \/ 0 changes/.test(task.status)) {
+                 // cb(false) // keep polling? (or does this mean we are connected?)
+                 cb(true)
+                 callHandlers("connected", task)
+                 } else {
+                 cb(false) // not done
+                 }
+                 })
+    }
+    */
+    /*
+    function taskInfo(id, cb) {
+        coax([serverUrl,"_active_tasks"], function(err, tasks) {
+             var me;
+             for (var i = tasks.length - 1; i >= 0; i--) {
+             if (tasks[i].task == id) {
+             me = tasks[i]
+             }
+             }
+             cb(false, me);
+             })
+    }
+    */
+
+    var publicAPI = {
+        start : doStartPost,
+        //cancel : doCancelPost,
+        on : function(name, cb) {
+            handlers[name] = handlers[name] || []
+            handlers[name].push(cb)
+        }
+    }
+    return publicAPI;
+
 }
 
