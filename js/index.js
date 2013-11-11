@@ -52,7 +52,6 @@ var album = {
         for(var i in message.pictures) {
             children.push('<img src="'+"data:image/jpeg;base64,"+message.pictures[i]+'" width="100"></img>');
         }
-        console.log(children.join());
         $("#preview").append(children.join());
     },
     
@@ -96,6 +95,8 @@ var app = {
                                 console.log("TOUCH STARTED");
                                 app.navpage('#share');
                                 composition = new message();
+                                $('#main_input').val("");
+                                album.preview(composition);
                                 
         });
     
@@ -106,13 +107,27 @@ var app = {
                               
         });
 
-        $('#share').bind('touchstart', function(e) {
-                         //composition.text = "blah";
-                         
+        $('#share').on('click', function(e) {
+            composition.text = $('#main_input').val();
+                       console.log(composition.pictures.length);
+                       if(composition.id) {
+                       window.config.site.db.get(composition.id, function(err, doc) {
+                                                 doc.pictures = composition.pictures;
+                                                 doc.text = composition.text;
+                          window.config.site.db.put(composition.id, doc, function(err, ok) {
+                                                    
+                                                    
+                                                    console.log(err,ok.pictures.length)
+                                                                           });
+                                                 
+                                                  });
+                       
+                       } else {
             window.config.site.db.post(composition, function(err, ok) {
                                        console.log(err,ok.id);
                                        });
-
+                       }
+                       
         });
         
         
@@ -166,7 +181,7 @@ var app = {
                         console.log(id[i]);
                         $('#'+id[i]).bind("click", function(e) {
                                           var i = $(this).attr("id");
-                        console.log('TOUCHED LIST',i);
+                                          app.loadmessage(i);
                                             });
                         $('#'+id[i]).on("swipeRight", function(e) {
                                         console.log($(this).attr("id"), 'swiped right');
@@ -179,8 +194,7 @@ var app = {
             
 
         $('#back_button').bind('touchstart', function(e) {
-                        console.log("back button");
-            app.navpage('#main');
+                               app.navpage('#main');
         });
         
         app.onstartconfig();
@@ -226,6 +240,20 @@ var app = {
         $(currentpage).toggle();
         $(pageid).toggle();
         currentpage = pageid;
+    },
+    
+    loadmessage: function(id) {
+        console.log("shiiiit");
+        if(!composition) {
+            composition = new message();
+        }
+        window.config.site.db(id, function(err,doc){
+            composition.pictures = doc.pictures;
+            composition.id = id;
+            $('#main_input').val(doc.text);
+            album.preview(composition);
+            app.navpage('#share');
+        });
     }
 };
 
