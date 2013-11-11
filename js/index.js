@@ -88,7 +88,6 @@ var app = {
         $('#share')  .toggle();
       //  $('#history').toggle();
         
-        app.receivedEvent('deviceready');
         for(var i = 0; i < 100; i=i+1) {
             console.log("device ready");
         }
@@ -219,19 +218,7 @@ var app = {
      
     
     },
-    
-    // Update DOM on a Received Event
-    receivedEvent: function(id) {
-        var parentElement = document.getElementById(id);
-        var listeningElement = parentElement.querySelector('.listening');
-        var receivedElement = parentElement.querySelector('.received');
 
-        listeningElement.setAttribute('style', 'display:none;');
-        receivedElement.setAttribute('style', 'display:block;');
-
-        console.log('Received Event: ' + id);
-        
-    },
     navpage: function(pageid) {
         console.log("nav to page", pageid);
         $(currentpage).toggle();
